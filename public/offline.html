@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c0e0b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Retro Empire">
+<title>Satoshi Retro Empire · Offline</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #0c0e0b; color: #f3ead6; }
+  body { font: 16px/1.45 ui-sans-serif, system-ui, sans-serif; }
+  button, a { touch-action: manipulation; }
+  button { font: inherit; color: inherit; }
+  main { max-width: 40rem; margin: 0 auto; padding: 1rem 1rem calc(5.5rem + env(safe-area-inset-bottom)); }
+  h1 { font-size: 1.7rem; line-height: 1.15; margin: 0.2rem 0 0; }
+  h2 { font-size: 1.15rem; margin: 0; }
+  p { margin: 0.4rem 0 0; }
+  .kicker, .meta { font-family: ui-monospace, monospace; font-size: 0.75rem; color: #f0a202; }
+  .muted { color: #a39884; }
+  .accent { color: #7dffb3; }
+  .bar { height: 4px; background: #f0a202; }
+  header.top { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 1rem; background: rgba(12,14,11,0.95); border-bottom: 1px solid #343b2c; }
+  .mark { width: 2.5rem; height: 2.5rem; display: grid; place-items: center; background: #f0a202; color: #1a1203; font-weight: 800; border-radius: 0.4rem; }
+  .chip { margin-left: auto; border: 1px solid #343b2c; background: #151812; color: #7dffb3; font-family: ui-monospace, monospace; font-size: 0.85rem; padding: 0.45rem 0.7rem; border-radius: 0.4rem; }
+  .card, .panel { border: 1px solid #343b2c; background: #151812; border-radius: 0.6rem; padding: 0.9rem; }
+  .stack { display: grid; gap: 0.7rem; margin-top: 0.9rem; }
+  .row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.8rem; }
+  .btn { min-height: 2.75rem; border: 0; border-radius: 0.4rem; padding: 0.4rem 0.9rem; background: #f0a202; color: #1a1203; font-weight: 700; }
+  .ghost { background: transparent; color: #f3ead6; border: 1px solid #343b2c; }
+  .lane { height: 0.7rem; background: #22281b; border-radius: 2px; overflow: hidden; }
+  .lane > span { display: block; height: 100%; }
+  .gold { background: #f0a202; }
+  .mint { background: #7dffb3; }
+  .track { position: relative; height: 4rem; border: 1px solid #343b2c; border-radius: 0.4rem; background: #0c0e0b; overflow: hidden; }
+  .zone { position: absolute; top: 0.4rem; bottom: 0.4rem; left: 42%; width: 16%; background: rgba(125,255,179,0.3); border-radius: 2px; }
+  .needle { position: absolute; top: 0.25rem; bottom: 0.25rem; width: 4px; margin-left: -2px; background: #f0a202; border-radius: 2px; }
+  .hits, .grid3, .pairs { display: grid; gap: 0.45rem; }
+  .hits { grid-template-columns: repeat(5, 1fr); }
+  .grid3 { grid-template-columns: repeat(3, 1fr); }
+  .pairs { grid-template-columns: repeat(4, 1fr); }
+  .cell { min-height: 2.75rem; border: 1px solid #343b2c; background: #22281b; border-radius: 0.35rem; font-family: ui-monospace, monospace; }
+  .cell.on { background: #f0a202; color: #1a1203; }
+  .pair { min-height: 3.4rem; font-size: 1.2rem; }
+  .pair.open { background: #151812; color: #f3ead6; }
+  nav.dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 3; display: grid; grid-template-columns: repeat(4, 1fr); background: rgba(12,14,11,0.96); border-top: 1px solid #343b2c; padding-bottom: env(safe-area-inset-bottom); }
+  nav.dock button { min-height: 3rem; border: 0; background: transparent; color: #a39884; font-size: 0.72rem; font-weight: 700; }
+  nav.dock button.on { color: #f0a202; background: #22281b; }
+  input { min-height: 2.75rem; width: 100%; border: 1px solid #343b2c; background: #0c0e0b; color: #f3ead6; border-radius: 0.4rem; padding: 0 0.7rem; font: inherit; }
+  .hide { display: none; }
+</style>
+</head>
+<body>
+<div class="bar"></div>
+<header class="top">
+  <div class="mark" aria-hidden="true">₿</div>
+  <div>
+    <strong>Retro Empire</strong>
+    <div class="meta">Offline · ohne Server</div>
+  </div>
+  <div class="chip" id="sats">0 sats</div>
+</header>
+<main id="app"></main>
+<nav class="dock" id="dock">
+  <button type="button" data-view="hall">Halle</button>
+  <button type="button" data-view="vault">Vault</button>
+  <button type="button" data-view="cards">Karten</button>
+  <button type="button" data-view="profile">Profil</button>
+</nav>
+<script>
+const KEY = "sre-offline-v1";
+const GAMES = [
+  { id: "hash-rush", title: "Hash Rush", year: 2013, blurb: "Triff die Goldzone. Das Gerät schürft dabei kein Bitcoin.", sats: 80, xp: 200 },
+  { id: "signal-match", title: "Signal-Tresor", year: 1988, blurb: "Acht Paare. Weniger Züge, höhere Punktzahl.", sats: 30, xp: 90 },
+  { id: "neon-keirin", title: "Neon Keirin", year: 1991, blurb: "Im Windschatten kehrt die Kraft zurück. Der Sprint entscheidet.", sats: 60, xp: 160 },
+  { id: "halving-hero", title: "Halving Hero", year: 2016, blurb: "Ein Feld leuchtet. Jeder Treffer macht das Fenster kürzer.", sats: 55, xp: 150 }
+];
+const MARKS = ["₿", "★", "◆", "▲", "●", "■", "♥", "✶"];
+
+const empty = () => ({ handle: "Archivar", xp: 0, sats: 0, cards: {}, scores: {}, log: [] });
+let state = load();
+let view = "hall";
+let playId = null;
+let stopGame = () => {};
+
+function load() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(KEY) || "null");
+    if (!raw || typeof raw.handle !== "string") return empty();
+    return { ...empty(), ...raw, cards: raw.cards || {}, scores: raw.scores || {}, log: Array.isArray(raw.log) ? raw.log.slice(0, 12) : [] };
+  } catch {
+    return empty();
+  }
+}
+function save() {
+  localStorage.setItem(KEY, JSON.stringify(state));
+  document.getElementById("sats").textContent = state.sats + " sats";
+}
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text != null) node.textContent = text;
+  return node;
+}
+function btn(label, className, onClick) {
+  const node = el("button", "btn" + (className ? " " + className : ""), label);
+  node.type = "button";
+  node.addEventListener("click", onClick);
+  return node;
+}
+function show(next, id) {
+  stopGame();
+  stopGame = () => {};
+  view = next;
+  playId = id || null;
+  paint();
+}
+function grant(game, score, win) {
+  const best = Math.max(state.scores[game.id] || 0, score);
+  state.scores[game.id] = best;
+  const lines = [game.title + ": " + score + " Punkte"];
+  if (win && !state.cards[game.id]) {
+    state.cards[game.id] = { title: game.title, edition: 1 };
+    state.sats += game.sats;
+    state.xp += game.xp;
+    lines.push("Karte im Archiv · +" + game.sats + " sats · +" + game.xp + " XP");
+  } else if (win) {
+    state.xp += 12;
+    lines.push("Karte war schon da · +12 XP");
+  } else {
+    lines.push("Diesmal bleibt das Regal zu.");
+  }
+  state.log = lines.concat(state.log).slice(0, 12);
+  save();
+  return lines;
+}
+
+function paint() {
+  document.getElementById("sats").textContent = state.sats + " sats";
+  for (const item of document.querySelectorAll("#dock button")) {
+    item.classList.toggle("on", item.dataset.view === (view === "play" ? "vault" : view));
+  }
+  const root = document.getElementById("app");
+  root.replaceChildren();
+  if (view === "hall") root.append(hall());
+  else if (view === "vault") root.append(vault());
+  else if (view === "cards") root.append(cards());
+  else if (view === "profile") root.append(profile());
+  else root.append(cabinet(GAMES.find((game) => game.id === playId)));
+}
+
+function hall() {
+  const wrap = el("section");
+  wrap.append(el("p", "kicker", "Season 01 · Offline"));
+  wrap.append(el("h1", "", "Die Halle, ohne Netz."));
+  wrap.append(el("p", "muted", "Vier Automaten laufen in dieser Datei. Fortschritt bleibt in diesem Browser. Nichts wird hochgeladen, kein Schlüssel wird abgefragt."));
+  const row = el("div", "row");
+  row.append(btn("In den Vault", "", () => show("vault")));
+  wrap.append(row);
+  const stats = el("div", "stack");
+  const box = el("div", "panel");
+  box.append(el("p", "meta", "Archiv"));
+  box.append(el("p", "", Object.keys(state.cards).length + "/" + GAMES.length + " Karten · " + state.xp + " XP · " + state.handle));
+  stats.append(box);
+  wrap.append(stats);
+  return wrap;
+}
+function vault() {
+  const wrap = el("section");
+  wrap.append(el("p", "kicker", "Vault"));
+  wrap.append(el("h1", "", "Automaten in der Datei."));
+  const list = el("div", "stack");
+  for (const game of GAMES) {
+    const card = el("article", "card");
+    card.append(el("p", "meta", String(game.year) + (state.cards[game.id] ? " · Karte im Archiv" : "")));
+    card.append(el("h2", "", game.title));
+    card.append(el("p", "muted", game.blurb));
+    card.append(el("p", "meta accent", game.sats + " sats · " + game.xp + " XP"));
+    const row = el("div", "row");
+    row.append(btn("Spielen", "", () => show("play", game.id)));
+    card.append(row);
+    list.append(card);
+  }
+  wrap.append(list);
+  return wrap;
+}
+function cards() {
+  const wrap = el("section");
+  wrap.append(el("p", "kicker", "Sammlung"));
+  wrap.append(el("h1", "", "Was diese Datei behält."));
+  const list = el("div", "stack");
+  for (const game of GAMES) {
+    const owned = state.cards[game.id];
+    const card = el("article", "card");
+    card.append(el("h2", owned ? "" : "muted", game.title));
+    card.append(el("p", "muted", owned ? "Edition " + owned.edition + " · Bestleistung " + (state.scores[game.id] || 0) : "Noch nicht gespielt."));
+    list.append(card);
+  }
+  wrap.append(list);
+  return wrap;
+}
+function profile() {
+  const wrap = el("section");
+  wrap.append(el("p", "kicker", "Profil"));
+  wrap.append(el("h1", "", state.handle));
+  wrap.append(el("p", "muted", state.xp + " XP · " + state.sats + " sats im Spiel-Ledger. Das ist keine Auszahlung."));
+  const form = el("form", "row");
+  const input = document.createElement("input");
+  input.maxLength = 24;
+  input.value = state.handle;
+  input.setAttribute("aria-label", "Name");
+  form.append(input);
+  const saveName = btn("Speichern", "", () => {});
+  saveName.type = "submit";
+  form.append(saveName);
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const name = input.value.trim().slice(0, 24);
+    if (!name) return;
+    state.handle = name;
+    save();
+    paint();
+  });
+  wrap.append(form);
+  const list = el("div", "stack");
+  if (!state.log.length) list.append(el("p", "muted", "Noch still."));
+  for (const line of state.log) list.append(el("p", "panel", line));
+  wrap.append(list);
+  const row = el("div", "row");
+  row.append(btn("Archiv auf diesem Gerät leeren", "ghost", () => {
+    if (!confirm("Archiv in dieser Datei wirklich leeren?")) return;
+    state = empty();
+    save();
+    paint();
+  }));
+  wrap.append(row);
+  return wrap;
+}
+
+function cabinet(game) {
+  const wrap = el("section");
+  if (!game) {
+    wrap.append(el("h1", "", "Dieser Automat fehlt."));
+    return wrap;
+  }
+  wrap.append(el("p", "kicker", String(game.year)));
+  wrap.append(el("h1", "", game.title));
+  wrap.append(el("p", "muted", game.blurb));
+  const stage = el("div", "stack");
+  wrap.append(stage);
+  const back = el("div", "row");
+  back.append(btn("Zurück in den Vault", "ghost", () => show("vault")));
+  wrap.append(back);
+  if (game.id === "hash-rush") mountHash(stage, game);
+  if (game.id === "signal-match") mountMatch(stage, game);
+  if (game.id === "neon-keirin") mountKeirin(stage, game);
+  if (game.id === "halving-hero") mountHero(stage, game);
+  return wrap;
+}
+
+function result(stage, game, lines) {
+  stage.replaceChildren();
+  for (const line of lines) stage.append(el("p", "panel", line));
+  const row = el("div", "row");
+  row.append(btn("Nochmal", "", () => show("play", game.id)));
+  stage.append(row);
+}
+
+function mountHash(stage, game) {
+  let hits = [];
+  let running = false;
+  let done = false;
+  let needle = 0;
+  let dir = 1;
+  let raf = 0;
+  const hud = el("p", "meta", "Schlag 1 / 5");
+  const track = el("div", "track");
+  track.append(el("div", "zone"));
+  const mark = el("div", "needle");
+  track.append(mark);
+  const slots = el("div", "hits");
+  const drawSlots = () => {
+    slots.replaceChildren();
+    for (let i = 0; i < 5; i++) slots.append(el("div", "cell", hits[i] == null ? "–" : String(hits[i])));
+  };
+  const lock = () => {
+    if (!running || done) return;
+    const accuracy = Math.max(0, Math.round((1 - Math.abs(needle - 0.5) / 0.5) * 100));
+    hits.push(accuracy);
+    drawSlots();
+    hud.textContent = "Schlag " + Math.min(hits.length + 1, 5) + " / 5 · zuletzt " + accuracy;
+    if (hits.length >= 5) {
+      done = true;
+      cancelAnimationFrame(raf);
+      const score = hits.reduce((sum, n) => sum + n, 0);
+      result(stage, game, grant(game, score, true));
+    }
+  };
+  track.addEventListener("click", lock);
+  const action = btn("Schicht starten", "", () => {
+    if (!running) {
+      running = true;
+      action.textContent = "Treffer setzen";
+      const loop = (now) => {
+        const dt = Math.min(0.05, (now - (loop.last || now)) / 1000);
+        loop.last = now;
+        if (!document.hidden && !done) {
+          needle += dir * dt * 0.95;
+          if (needle >= 1) { needle = 1; dir = -1; }
+          if (needle <= 0) { needle = 0; dir = 1; }
+          mark.style.left = (needle * 100) + "%";
+        }
+        raf = requestAnimationFrame(loop);
+      };
+      raf = requestAnimationFrame(loop);
+      return;
+    }
+    lock();
+  });
+  drawSlots();
+  stage.append(hud, track, slots, action, el("p", "muted", "Tippe, wenn die Nadel in der grünen Zone steht."));
+  stopGame = () => cancelAnimationFrame(raf);
+}
+
+function mountMatch(stage, game) {
+  let tiles = null;
+  let open = [];
+  let matched = [];
+  let moves = 0;
+  let lock = false;
+  let done = false;
+  const start = btn("Tresor mischen", "", () => {
+    const deck = MARKS.flatMap((mark, key) => [{ key, mark }, { key, mark }]);
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+    tiles = deck;
+    open = [];
+    matched = [];
+    moves = 0;
+    done = false;
+    draw();
+  });
+  stage.append(start, el("p", "muted", "Acht Paare. Weniger Züge, höhere Punktzahl."));
+  const draw = () => {
+    const hud = el("p", "meta", "Züge " + moves + " · Paare " + matched.length + "/8");
+    const grid = el("div", "pairs");
+    tiles.forEach((tile, index) => {
+      const shown = open.includes(index) || matched.includes(tile.key);
+      const cell = el("button", "cell pair" + (shown ? " open" : ""), shown ? tile.mark : "");
+      cell.type = "button";
+      cell.addEventListener("click", () => flip(index));
+      grid.append(cell);
+    });
+    stage.replaceChildren(hud, grid);
+  };
+  const flip = (index) => {
+    if (!tiles || lock || done || open.includes(index) || matched.includes(tiles[index].key)) return;
+    open.push(index);
+    draw();
+    if (open.length < 2) return;
+    lock = true;
+    const [a, b] = open;
+    setTimeout(() => {
+      moves += 1;
+      if (tiles[a].key === tiles[b].key) matched.push(tiles[a].key);
+      open = [];
+      lock = false;
+      if (matched.length === 8 && !done) {
+        done = true;
+        result(stage, game, grant(game, Math.max(160, 1700 - moves * 45), true));
+        return;
+      }
+      draw();
+    }, 420);
+  };
+}
+
+function mountKeirin(stage, game) {
+  const GOAL = 100;
+  let running = false;
+  let over = false;
+  let sprint = false;
+  let you = 0;
+  let stam = 100;
+  const riders = [0, 0, 0];
+  const phase = [0.4, 1.7, 2.8];
+  let raf = 0;
+  const lanes = el("div", "stack");
+  const bars = [];
+  const labels = ["Du", "Bahn 2", "Bahn 3", "Bahn 4"];
+  for (let i = 0; i < 4; i++) {
+    const row = el("div");
+    const head = el("div", "meta", labels[i]);
+    const lane = el("div", "lane");
+    const fill = el("span", i === 0 ? "gold" : "mint");
+    lane.append(fill);
+    row.append(head, lane);
+    lanes.append(row);
+    bars.push({ head, fill });
+  }
+  const meter = el("div", "lane");
+  const juice = el("span", "gold");
+  juice.style.width = "100%";
+  meter.append(juice);
+  const action = btn("Start", "", () => {
+    if (running) return;
+    running = true;
+    action.textContent = "Sprint halten";
+    let last = performance.now();
+    const loop = (now) => {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      if (!document.hidden && !over) {
+        if (sprint && stam > 0) {
+          you += 27 * dt;
+          stam = Math.max(0, stam - 36 * dt);
+        } else {
+          you += (stam < 8 ? 7 : 14) * dt;
+          stam = Math.min(100, stam + 22 * dt);
+        }
+        for (let i = 0; i < 3; i++) {
+          phase[i] += dt;
+          riders[i] += (Math.sin(phase[i] * 1.4) > 0.15 ? 19 : 11) * dt;
+        }
+        paintLanes();
+        const rivalDone = riders.some((distance) => distance >= GOAL);
+        if (you >= GOAL || rivalDone) {
+          over = true;
+          const win = you >= GOAL && riders.every((distance) => distance < you);
+          result(stage, game, grant(game, Math.round(you * 10), win));
+          return;
+        }
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+  });
+  action.addEventListener("pointerdown", () => { sprint = true; });
+  const up = () => { sprint = false; };
+  action.addEventListener("pointerup", up);
+  action.addEventListener("pointerleave", up);
+  const paintLanes = () => {
+    const values = [you, ...riders];
+    values.forEach((value, index) => {
+      bars[index].head.textContent = labels[index] + "  " + Math.min(GOAL, Math.round(value));
+      bars[index].fill.style.width = Math.min(100, value) + "%";
+    });
+    juice.style.width = stam + "%";
+  };
+  stage.append(el("p", "meta", "Kraft"), meter, lanes, action, el("p", "muted", "Loslassen ist Windschatten. Leer sprinten bremst."));
+  stopGame = () => cancelAnimationFrame(raf);
+}
+
+function mountHero(stage, game) {
+  const GOAL = 8;
+  let running = false;
+  let over = false;
+  let hits = 0;
+  let lives = 3;
+  let windowMs = 900;
+  let lit = null;
+  let token = 0;
+  let timer = 0;
+  const hud = el("p", "meta", "Treffer 0/8 · Leben 3");
+  const grid = el("div", "grid3");
+  const cells = [];
+  const draw = () => {
+    hud.textContent = "Treffer " + hits + "/" + GOAL + " · Leben " + lives + " · Fenster " + windowMs + " ms";
+    cells.forEach((cell, index) => cell.classList.toggle("on", index === lit));
+  };
+  const fail = () => {
+    lives -= 1;
+    if (lives <= 0) {
+      over = true;
+      clearTimeout(timer);
+      result(stage, game, grant(game, hits * 40, false));
+    }
+  };
+  const arm = () => {
+    clearTimeout(timer);
+    const id = ++token;
+    timer = setTimeout(() => {
+      if (over || token !== id) return;
+      fail();
+      if (over) return;
+      lit = lit == null ? 0 : (lit + 3) % 9;
+      draw();
+      arm();
+    }, windowMs);
+  };
+  for (let index = 0; index < 9; index++) {
+    const cell = el("button", "cell", String(index + 1));
+    cell.type = "button";
+    cell.addEventListener("click", () => {
+      if (!running || over || lit == null) return;
+      if (index !== lit) {
+        fail();
+        draw();
+        return;
+      }
+      hits += 1;
+      if (hits >= GOAL) {
+        over = true;
+        clearTimeout(timer);
+        lit = null;
+        draw();
+        result(stage, game, grant(game, hits * 50 + lives * 20, true));
+        return;
+      }
+      windowMs = Math.max(320, Math.round(windowMs * 0.82));
+      lit = (index + 1 + Math.floor(Math.random() * 7)) % 9;
+      token += 1;
+      draw();
+      arm();
+    });
+    cells.push(cell);
+    grid.append(cell);
+  }
+  const start = btn("Feld öffnen", "", () => {
+    running = true;
+    over = false;
+    hits = 0;
+    lives = 3;
+    windowMs = 900;
+    lit = 4;
+    start.remove();
+    draw();
+    arm();
+  });
+  stage.append(hud, grid, start, el("p", "muted", "Nur das leuchtende Feld zählt. Acht Treffer öffnen die Karte."));
+  stopGame = () => clearTimeout(timer);
+}
+
+document.getElementById("dock").addEventListener("click", (event) => {
+  const button = event.target.closest("button");
+  if (button) show(button.dataset.view);
+});
+save();
+paint();
+</script>
+</body>
+</html>

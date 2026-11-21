@@ -1,0 +1,12 @@
+node_modules
+.vercel
+.tanstack
+.grok
+artifacts
+screenshots
+test-results
+playwright-report
+dist
+*.log
+.env
+.env.*
