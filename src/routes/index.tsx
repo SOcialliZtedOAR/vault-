@@ -116,7 +116,7 @@ function Home() {
           </Link>
         </div>
         <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-2 md:overflow-visible md:px-0">
-          {["neon-keirin", "sprite-saga", "modem-marathon", "satoshi-solitaire", "vault-racer", "halving-hero", "block-oracle", "crt-ghosts"].map((id) => {
+          {["coin-tower", "block-hop", "raster-light", "neon-keirin", "sprite-saga", "halving-hero", "block-oracle", "crt-ghosts"].map((id) => {
             const game = GAMES.find((item) => item.id === id);
             return game ? (
               <div key={game.id} className="w-72 shrink-0 snap-start md:w-auto">

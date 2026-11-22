@@ -3,7 +3,9 @@ import { useState } from "react";
 import { Shell } from "@/components/empire/Shell";
 import { AmberRally } from "@/components/empire/games/AmberRally";
 import { BlockOracle } from "@/components/empire/games/BlockOracle";
+import { BlockHop } from "@/components/empire/games/BlockHop";
 import { CartridgeQuest } from "@/components/empire/games/CartridgeQuest";
+import { CoinTower } from "@/components/empire/games/CoinTower";
 import { CometCabinet } from "@/components/empire/games/CometCabinet";
 import { CrtGhosts } from "@/components/empire/games/CrtGhosts";
 import { DosDungeon } from "@/components/empire/games/DosDungeon";
@@ -15,6 +17,7 @@ import { ModemMarathon } from "@/components/empire/games/ModemMarathon";
 import { NeonKeirin } from "@/components/empire/games/NeonKeirin";
 import { PeerPong } from "@/components/empire/games/PeerPong";
 import { PhosphorSerpent } from "@/components/empire/games/PhosphorSerpent";
+import { RasterLight } from "@/components/empire/games/RasterLight";
 import { SatoshiSolitaire } from "@/components/empire/games/SatoshiSolitaire";
 import { SignalMatch } from "@/components/empire/games/SignalMatch";
 import { SpriteSaga } from "@/components/empire/games/SpriteSaga";
@@ -52,6 +55,9 @@ function Cabinet({ game, onFinish }: { game: Game; onFinish: (score: number, win
   if (game.engine === "modem") return <ModemMarathon onFinish={onFinish} />;
   if (game.engine === "solitaire") return <SatoshiSolitaire onFinish={onFinish} />;
   if (game.engine === "trial") return <VaultRacer onFinish={onFinish} />;
+  if (game.engine === "tower") return <CoinTower onFinish={onFinish} />;
+  if (game.engine === "hop") return <BlockHop onFinish={onFinish} />;
+  if (game.engine === "lights") return <RasterLight onFinish={onFinish} />;
   return <DigPit game={game} onFinish={onFinish} />;
 }
 

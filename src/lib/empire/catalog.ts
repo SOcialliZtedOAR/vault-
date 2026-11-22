@@ -363,6 +363,54 @@ export const GAMES = [
 		setId: "bitcoin"
 	}),
 	g({
+		id: "coin-tower",
+		code: "TOWR",
+		title: "Münzturm",
+		era: "arcade",
+		yearStyle: 1984,
+		rarity: "rare",
+		blurb: "Der Balken pendelt. Leg ihn ab, solange er den Turm noch trifft. Sechs Stockwerke reichen.",
+		playable: true,
+		engine: "tower",
+		rewards: {
+			sats: 45,
+			xp: 130
+		},
+		setId: "arcade"
+	}),
+	g({
+		id: "block-hop",
+		code: "HOP",
+		title: "Blocksprung",
+		era: "8-bit",
+		yearStyle: 1983,
+		rarity: "common",
+		blurb: "Drei Bahnen, ein sicheres Ufer. Spring vor, wenn die Lücke da ist.",
+		playable: true,
+		engine: "hop",
+		rewards: {
+			sats: 40,
+			xp: 120
+		},
+		setId: "classics"
+	}),
+	g({
+		id: "raster-light",
+		code: "LITE",
+		title: "Rasterlicht",
+		era: "puzzle",
+		yearStyle: 1986,
+		rarity: "rare",
+		blurb: "Ein Tipp kippt das Feld und die Nachbarn. Alle Lichter aus, dann gehört dir die Karte.",
+		playable: true,
+		engine: "lights",
+		rewards: {
+			sats: 48,
+			xp: 140
+		},
+		setId: "classics"
+	}),
+	g({
 		id: "tape-war",
 		title: "Tape War",
 		era: "8-bit",

@@ -27,6 +27,9 @@ const cabinets: { id: string; title: string; control: string; starts?: boolean }
   { id: "vault-racer", title: "Vault Racer", control: "Runde starten", starts: true },
   { id: "crt-ghosts", title: "CRT-Geister", control: "Labyrinth betreten", starts: true },
   { id: "halving-hero", title: "Halving Hero", control: "Runde starten", starts: true },
+  { id: "coin-tower", title: "Münzturm", control: "Turm starten", starts: true },
+  { id: "block-hop", title: "Blocksprung", control: "Bahn starten", starts: true },
+  { id: "raster-light", title: "Rasterlicht", control: "Feld mischen", starts: true },
 ];
 
 test.beforeEach(async ({ page }) => {

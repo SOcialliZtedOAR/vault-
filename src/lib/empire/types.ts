@@ -30,7 +30,10 @@ export type Engine =
   | "saga"
   | "modem"
   | "solitaire"
-  | "trial";
+  | "trial"
+  | "tower"
+  | "hop"
+  | "lights";
 
 export type Game = {
   id: string;
