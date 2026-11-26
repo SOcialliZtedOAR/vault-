@@ -1,0 +1,1 @@
+gh auth refresh --scopes repo,workflow,write:packages,delete_repo
