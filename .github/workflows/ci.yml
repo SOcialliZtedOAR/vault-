@@ -1,24 +1,23 @@
-name: Halle prüfen
+name: Halle
 
 on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: halle-${{ github.ref }}
+  group: halle-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  pruefen:
-    name: Typen, Build, E2E
+  bauen:
+    name: Typen und Build
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-    env:
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+    timeout-minutes: 15
     steps:
       - name: Code holen
         uses: actions/checkout@v4
@@ -38,8 +37,37 @@ jobs:
       - name: Build
         run: npm run build
 
+  e2e:
+    name: Ende-zu-Ende
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+    steps:
+      - name: Code holen
+        uses: actions/checkout@v4
+
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Abhängigkeiten
+        run: npm ci
+
       - name: Browser
         run: npx playwright install --with-deps chromium
 
-      - name: Ende-zu-Ende
+      - name: Tests
         run: npm run e2e
+
+      - name: Spuren sichern
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-spuren
+          path: |
+            test-results
+            playwright-report
+          retention-days: 7
