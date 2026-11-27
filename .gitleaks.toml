@@ -1,0 +1,8 @@
+title = "vault"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Gemeinsames Preview-OAuth des Sandbox-Brokers. Kein Konto-Token."
+paths = ['''src/lib/auth/preview\.ts''']

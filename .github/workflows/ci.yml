@@ -37,6 +37,21 @@ jobs:
       - name: Build
         run: npm run build
 
+  geheimnisse:
+    name: Geheimnisse
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Code holen
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.30.0/gitleaks_8.30.0_linux_x64.tar.gz | tar -xz gitleaks
+          ./gitleaks detect --source . --config .gitleaks.toml --redact --no-banner
+
   e2e:
     name: Ende-zu-Ende
     runs-on: ubuntu-latest
