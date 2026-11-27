@@ -40,7 +40,7 @@ jobs:
   geheimnisse:
     name: Geheimnisse
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - name: Code holen
         uses: actions/checkout@v4
@@ -51,6 +51,11 @@ jobs:
         run: |
           curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.30.0/gitleaks_8.30.0_linux_x64.tar.gz | tar -xz gitleaks
           ./gitleaks detect --source . --config .gitleaks.toml --redact --no-banner
+
+      - name: TruffleHog
+        run: |
+          curl -sSfL https://github.com/trufflesecurity/trufflehog/releases/download/v3.100.1/trufflehog_3.100.1_linux_amd64.tar.gz | tar -xz trufflehog
+          ./trufflehog git file://. --no-update --fail --github-actions --results=verified,unknown,unverified
 
   e2e:
     name: Ende-zu-Ende
